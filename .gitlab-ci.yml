@@ -1,0 +1,28 @@
+image: markhobson/maven-chrome:jdk-11
+
+stages:
+  - build
+  - test
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+
+build:
+  stage: build
+  script:
+    - mvn package --file petclinic/pom.xml
+    - mvn --file petclinic-selenium/pom.xml -DskipTests install
+  artifacts:
+    paths:
+      - petclinic/target
+
+test:
+  stage: test
+  script:
+    - java -jar petclinic/target/petclinic-2.2.2.BUILD-SNAPSHOT.jar &
+    - sleep 15
+    - mvn -Dtest=PetclinicTest --file petclinic-selenium/pom.xml -Dbrowser=chrome -Dheadless=true test
